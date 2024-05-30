@@ -75,9 +75,35 @@ const CourseInfo = {
       }
     }
   ];
-
-
-function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmission){
+  
+  function getLearnerData(courseInfo, assignmentGroup, learnerSubmission){
     //Return an array of objects that contains learner id, weighted average, and assignment_id
+    let learnerCourseScores = [];
+    let learner = {};
 
-}
+    //get the ID for each learner in learnerSubmission file
+    function getIDs(){
+        let ids = [];
+        learnerSubmission.forEach((submission) => {
+            if(!ids.includes(submission.learner_id)){
+                ids.push(submission.learner_id);
+            }
+        });
+        return ids;
+    }
+
+    let ids = getIDs();
+
+    //Assign id key and push learner onto the learnerCoursesScores
+    ids.forEach((num) => {
+        console.log(learner);
+        learner.id = num;
+        learnerCourseScores.push({...learner});
+    });
+
+    console.log(learnerCourseScores)
+    
+    return learnerCourseScores;
+  }
+
+  getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions)
