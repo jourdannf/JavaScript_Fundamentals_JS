@@ -203,18 +203,16 @@ const CourseInfo = {
         }
     }
 
-    //Get totalScores from learnerSubmission
-    //Get totalPossibleScores from assignmentGroup.submission
-    //Divide the two values and put it as the avg key in each learner person
-
     let completedAssignByLearner = {}; // all assignments each user completed; 
                                         //key is id and value is array of asssignments completed
 
     //After this code, all the averages should be the total of all the scores from each learner
     learnerSubmission.forEach((submissionData)=> {
 
-        //Get the ids for the assignments each learner completed
-        //If learner_id is not a key in completedAssignByLearner, then make an empty array
+        //This will look for the assignments completed by each learner while calculating their scores
+        //This will be used to determine the possible score each learner could possible get for
+        //the weighted average later on
+        //In the case that learners completes a different amount of assignment, this keeps track of that
         if (!Object.keys(completedAssignByLearner).includes(String(submissionData.learner_id))){
             completedAssignByLearner[submissionData.learner_id] = [];
         }
@@ -222,22 +220,28 @@ const CourseInfo = {
 
         
 
-        //Add the scores for each assignment per learner
+        //Each learner is represented by an index in the learnerCourseScores
+        //This part of the code should update with the total scores for all assignments
+        //completed by each user
         for (let i = 0; i < learnerCourseScores.length; i ++){
             if (!Object.keys(learnerCourseScores[i]).includes("avg")){
                 learnerCourseScores[i].avg = 0;
             }
 
             
-            //getting the dueDate for the assignment
+            //Get the due date for the assignment
             let assignmentDueDate  = getCorrectAssignment(submissionData.assignment_id).due_at;
             
+            //If the assignment is due, the score will be added to the weighted average
+            //If the assignment is late, the score will be deducted by 10% of the possible score
             if(submissionData.learner_id === learnerCourseScores[i].id && isDue(assignmentDueDate)){
                 
+                //The assignment being deducted by 10% of the possible score if the assignment is late
                 if (isLate(submissionData.submission.submitted_at, assignmentDueDate)){
                     submissionData.submission.score -= getCorrectAssignment(submissionData.assignment_id).points_possible * .1
                 }
 
+                //Adding the scores together
                 let learnerData = learnerCourseScores[i];
                 learnerCourseScores[i].avg += submissionData.submission.score;
                 learnerData[submissionData.assignment_id] = submissionData.submission.score;
@@ -261,7 +265,7 @@ const CourseInfo = {
             
             for (let i = 0; i < allAssignments.length; i++){
 
-                //You have to be due and the learner has to have you done in order for it to be
+                //Assignment has to be due and the learner has to have done the assignment in order for it to be
                 //added to the totalScores and as one of the assignments
                 if (allAssignments[i].id === id && isDue(allAssignments[i].due_at)){
                     learnerGrades[id] /= allAssignments[i].points_possible;
