@@ -81,6 +81,15 @@ const CourseInfo = {
     let learnerCourseScores = [];
     let learner = {};
 
+    //Check if assignmentGroup belongs to right course
+    try {
+        if (courseInfo.id !== assignmentGroup.course_id){
+            throw new Error("This assignment group doesn't belong to this course");
+        }
+    }catch(err){
+        console.log(err);
+    }
+
     //get the ID for each learner in learnerSubmission file
     function getIDs(){
         let ids = [];
