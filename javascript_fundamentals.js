@@ -75,20 +75,29 @@ const CourseInfo = {
       }
     }
   ];
+
+  try {
+    //Check if assignment belongs to the right course
+    if (CourseInfo.id !== AssignmentGroup.course_id){
+        throw new Error("This assignment group doesn't belong to this course");
+    }
+
+    //Checks if possible points is greater than 0
+    AssignmentGroup.assignments.forEach(assignmentInfo => {
+        if (assignmentInfo.points_possible <= 0){
+            throw new Error("Point's possible has to be greater than 0");
+        }
+    });
+    
+    console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
+}catch(err){
+    console.log(err);
+}
   
   function getLearnerData(courseInfo, assignmentGroup, learnerSubmission){
     //Return an array of objects that contains learner id, weighted average, and assignment_id
     let learnerCourseScores = [];
     let learner = {};
-
-    //Check if assignmentGroup belongs to right course
-    try {
-        if (courseInfo.id !== assignmentGroup.course_id){
-            throw new Error("This assignment group doesn't belong to this course");
-        }
-    }catch(err){
-        console.log(err);
-    }
 
     //get the ID for each learner in learnerSubmission file
     function getIDs(){
@@ -174,10 +183,7 @@ const CourseInfo = {
     });
 
     
-
-    console.log(learnerCourseScores);
-    
     return learnerCourseScores;
   }
 
-  getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
+//   console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
