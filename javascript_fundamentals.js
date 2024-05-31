@@ -109,14 +109,14 @@ const CourseInfo = {
                                         //key is id and value is array of asssignments completed
 
     //After this code, all the averages should be the total of all the scores from each learner
-    learnerSubmission.forEach((person)=> {
+    learnerSubmission.forEach((submissionData)=> {
 
         //Get the ids for the assignments each learner completed
         //If learner_id is not a key in completedAssignByLearner, then make an empty array
-        if (!Object.keys(completedAssignByLearner).includes(String(person.learner_id))){
-            completedAssignByLearner[person.learner_id] = [];
+        if (!Object.keys(completedAssignByLearner).includes(String(submissionData.learner_id))){
+            completedAssignByLearner[submissionData.learner_id] = [];
         }
-        completedAssignByLearner[person.learner_id].push(person.assignment_id);
+        completedAssignByLearner[submissionData.learner_id].push(submissionData.assignment_id);
 
         //Add the scores for each assignment per learner
         for (let i = 0; i < learnerCourseScores.length; i ++){
@@ -124,8 +124,10 @@ const CourseInfo = {
                 learnerCourseScores[i].avg = 0;
             }
             
-            if(person.learner_id === learnerCourseScores[i].id){
-                learnerCourseScores[i].avg += person.submission.score;
+            if(submissionData.learner_id === learnerCourseScores[i].id){
+                let learnerData = learnerCourseScores[i];
+                learnerCourseScores[i].avg += submissionData.submission.score;
+                learnerData[submissionData.assignment_id] = submissionData.submission.score;
                 break;
             }
         }
@@ -150,6 +152,7 @@ const CourseInfo = {
             
             for (let i = 0; i < allAssignments.length; i++){
                 if (allAssignments[i].id === id){
+                    learnerGrades[id] /= allAssignments[i].points_possible;
                     totalScores += allAssignments[i].points_possible;
                     break;
                 }
@@ -158,19 +161,14 @@ const CourseInfo = {
         });
         
         learnerGrades.avg /=totalScores;
+
     });
 
-    // assignmentGroup.assignments.forEach((assignment) => {
-    //     totalScores += assignment.points_possible;
-    // })
+    
 
-    // learnerCourseScores.forEach((person) => person.avg/=totalScores);
-
-    //Divide and add that to the object
-
-    console.log(learnerCourseScores)
+    console.log(learnerCourseScores);
     
     return learnerCourseScores;
   }
 
-  getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions)
+  getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
