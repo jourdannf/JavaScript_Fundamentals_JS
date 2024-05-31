@@ -76,7 +76,56 @@ const CourseInfo = {
     }
   ];
 
+  //ERROR CHECKING
   try {
+
+    //Checks if all numbers are numbers
+    const numberKeys = ["id", "course_id", "group_weight", "points_possible", "learner_id", "assignment_id", "score"];
+    
+    //CourseInfo
+    for (key in CourseInfo){
+        if (numberKeys.includes(key) && typeof CourseInfo[key] !== "number"){
+            throw new Error("The Course Info id is supposed to be a number.");
+        }
+    }
+
+    //Assignments
+    for (key in AssignmentGroup){
+        if (key === "assignments"){
+            for (assignment in AssignmentGroup[key]){ //Loop through assignments array
+                for (assignmentKey in assignment){ //Loop through keys of assignments
+                    if (numberKeys.includes(assignmentKey) && typeof CourseInfo[assignmentKey] !== "number"){
+                        throw new Error("The Assignment " + assignmentKey + " is supposed to be a number.");
+                    }
+                }
+            }
+        }
+
+        if (numberKeys.includes(key) && typeof AssignmentGroup[key] !== "number"){
+            throw new Error("The Assignment Group " + key + " is supposed to be a number.");
+        }
+    }
+
+    //Submissions
+    for (index in LearnerSubmissions){
+        let submission = LearnerSubmissions[index];
+        for (key in LearnerSubmissions[index]){
+            if (key === "submission"){
+                let submissionInfo = submission[key]
+                for (submissionKey in submission[key]){ //Loop through assignments array
+                    if (numberKeys.includes(submissionKey) && typeof submissionInfo[submissionKey] !== "number"){
+                        throw new Error("The Submission " + submissionKey + " is supposed to be a number.");
+                    }
+                }
+            }
+    
+            if (numberKeys.includes(key) && typeof submission[key] !== "number"){
+                throw new Error("The Learner Submission " + key + " is supposed to be a number.");
+            }
+        }
+        
+    }
+
     //Check if assignment belongs to the right course
     if (CourseInfo.id !== AssignmentGroup.course_id){
         throw new Error("This assignment group doesn't belong to this course");
@@ -93,6 +142,10 @@ const CourseInfo = {
 }catch(err){
     console.log(err);
 }
+//ERROR CHECKING COMPLETE
+//
+//
+//
   
   function getLearnerData(courseInfo, assignmentGroup, learnerSubmission){
     //Return an array of objects that contains learner id, weighted average, and assignment_id
@@ -110,14 +163,45 @@ const CourseInfo = {
         return ids;
     }
 
+    //Returns true is the assignment due date has already passed
+    function isDue(assignmentDueDate){
+        let today = new Date();
+        let dueDate = new Date(assignmentDueDate);
+
+        return dueDate < today;
+
+    }
+
+    //Returns true if the assignment is late
+    function isLate(submittedAtDate, assignmentDueDate){
+        let submitDate = new Date(submittedAtDate);
+        let assignmentDate = new Date(assignmentDueDate);
+
+        if (submitDate > assignmentDate) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+
     let ids = getIDs();
 
     //Assign id key and push learner onto the learnerCoursesScores
     ids.forEach((num) => {
-        // console.log(learner);
         learner.id = num;
         learnerCourseScores.push({...learner});
     });
+
+    function getCorrectAssignment(assignment_id){
+
+        for (let i = 0; i < AssignmentGroup.assignments.length; i ++){
+            if (AssignmentGroup.assignments[i].id === assignment_id){
+                return(AssignmentGroup.assignments[i]);
+            }
+            
+        }
+    }
 
     //Get totalScores from learnerSubmission
     //Get totalPossibleScores from assignmentGroup.submission
@@ -136,13 +220,24 @@ const CourseInfo = {
         }
         completedAssignByLearner[submissionData.learner_id].push(submissionData.assignment_id);
 
+        
+
         //Add the scores for each assignment per learner
         for (let i = 0; i < learnerCourseScores.length; i ++){
             if (!Object.keys(learnerCourseScores[i]).includes("avg")){
                 learnerCourseScores[i].avg = 0;
             }
+
             
-            if(submissionData.learner_id === learnerCourseScores[i].id){
+            //getting the dueDate for the assignment
+            let assignmentDueDate  = getCorrectAssignment(submissionData.assignment_id).due_at;
+            
+            if(submissionData.learner_id === learnerCourseScores[i].id && isDue(assignmentDueDate)){
+                
+                if (isLate(submissionData.submission.submitted_at, assignmentDueDate)){
+                    submissionData.submission.score -= getCorrectAssignment(submissionData.assignment_id).points_possible * .1
+                }
+
                 let learnerData = learnerCourseScores[i];
                 learnerCourseScores[i].avg += submissionData.submission.score;
                 learnerData[submissionData.assignment_id] = submissionData.submission.score;
@@ -150,11 +245,7 @@ const CourseInfo = {
             }
         }
     });
-
-    // console.log(completedAssignByLearner);
-
     
-
     //The amount of total points possible for each learner
 
     let allAssignments = assignmentGroup.assignments; //array of all the assignments
@@ -169,7 +260,10 @@ const CourseInfo = {
             // for each id find the matching assignment
             
             for (let i = 0; i < allAssignments.length; i++){
-                if (allAssignments[i].id === id){
+
+                //You have to be due and the learner has to have you done in order for it to be
+                //added to the totalScores and as one of the assignments
+                if (allAssignments[i].id === id && isDue(allAssignments[i].due_at)){
                     learnerGrades[id] /= allAssignments[i].points_possible;
                     totalScores += allAssignments[i].points_possible;
                     break;
@@ -185,5 +279,3 @@ const CourseInfo = {
     
     return learnerCourseScores;
   }
-
-//   console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
